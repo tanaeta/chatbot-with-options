@@ -162,7 +162,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto h-[600px] flex flex-col rounded-2xl bg-gray-50 shadow relative">
+    <div className="w-full max-w-lg mx-auto h-[calc(100vh-4rem)] flex flex-col rounded-2xl bg-gray-50 shadow relative">
       {/* ヘッダー部分 */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200">
         <h1 className="text-2xl font-bold">チャットボット</h1>
@@ -177,7 +177,7 @@ export default function Chatbot() {
             className={`flex ${msg.role === 'assistant' ? 'justify-start' : 'justify-end'}`}
           >
             <div
-              className={`flex flex-col p-2 rounded-2xl whitespace-pre-wrap mb-2 max-w-sm ${
+              className={`flex flex-col p-2 rounded-2xl whitespace-pre-wrap mb-2 max-w-sm text-lg ${
                 msg.role === 'assistant' ? 'bg-purple-100 text-left' : 'bg-blue-100 text-right'
               }`}
             >
