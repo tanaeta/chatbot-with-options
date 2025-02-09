@@ -1,5 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+// シンプルな画像リンク検出用の正規表現
+// (https://～) 形式でjpg, jpeg, png, gif, webpなど拡張子のURLを検出
+const imageUrlRegex = /(https?:\/\/[^\s]+\.(?:png|jpe?g|gif|webp))/gi;
+
 export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
@@ -15,6 +19,9 @@ export default function Chatbot() {
   ]);
   const [userInput, setUserInput] = useState('');
 
+  // モーダルで表示する画像URL
+  const [selectedImageUrl, setSelectedImageUrl] = useState(null);
+
   // スクロール領域への参照
   const scrollRef = useRef(null);
 
@@ -24,6 +31,59 @@ export default function Chatbot() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // メッセージ文字列を解析して、画像URLをクリック可能にする
+  // 通常のテキストと画像リンクを分割して表示するコンポーネント
+  function RenderMessageContent({ text }) {
+    // 正規表現にマッチした箇所を分割し、画像は <img> などで表示
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = imageUrlRegex.exec(text)) !== null) {
+      // match.index から match[0] までが画像URL
+      const url = match[0];
+      // 画像URLが始まる前のテキストを追加
+      if (match.index > lastIndex) {
+        parts.push(
+          <span key={lastIndex + '-text'}>
+            {text.slice(lastIndex, match.index)}
+          </span>
+        );
+      }
+      parts.push(
+        <img
+          key={match.index + '-img'}
+          src={url}
+          alt="画像"
+          className="w-32 h-auto cursor-pointer border border-gray-300 rounded mb-2"
+          onClick={() => openImageModal(url)}
+        />
+      );
+      lastIndex = match.index + url.length;
+    }
+
+    // 最後の部分のテキストを追加
+    if (lastIndex < text.length) {
+      parts.push(
+        <span key={lastIndex + '-last'}>
+          {text.slice(lastIndex)}
+        </span>
+      );
+    }
+
+    return <>{parts}</>;
+  }
+
+  // 画像をクリックした時にモーダルを開く
+  const openImageModal = (url) => {
+    setSelectedImageUrl(url);
+  };
+
+  // モーダルを閉じる
+  const closeImageModal = () => {
+    setSelectedImageUrl(null);
+  };
 
   // 選択肢がクリックされた時の処理
   const handleOptionClick = (option) => {
@@ -91,10 +151,10 @@ export default function Chatbot() {
         const newMessages = [...prev];
         newMessages.pop(); // remove temporary message
 
-        // ダミー応答
+        // ダミー応答（例：画像URLを返す）
         newMessages.push({
           role: 'assistant',
-          content: '承知しました。詳しく確認して回答いたします。',
+          content: '承知しました。詳しく確認して回答いたします。\nサンプル画像URL: https://sample-img-url/test.jpg\n他に質問はありますか？',
         });
         return newMessages;
       });
@@ -102,13 +162,13 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto h-[600px] flex flex-col rounded-2xl bg-gray-50 shadow">
+    <div className="w-full max-w-lg mx-auto h-[600px] flex flex-col rounded-2xl bg-gray-50 shadow relative">
       {/* ヘッダー部分 */}
       <div className="flex-shrink-0 p-4 border-b border-gray-200">
         <h1 className="text-2xl font-bold">チャットボット</h1>
       </div>
 
-      {/* メッセージ一覧を表示するスクロール領域（通常順で表示） */}
+      {/* メッセージ一覧を表示するスクロール領域 */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, idx) => (
           // roleに応じて左右に振り分け
@@ -121,7 +181,11 @@ export default function Chatbot() {
                 msg.role === 'assistant' ? 'bg-purple-100 text-left' : 'bg-blue-100 text-right'
               }`}
             >
-              <p className="mb-2">{msg.content}</p>
+              {/* メッセージ内のテキスト・画像URLを分割して表示 */}
+              <div className="mb-2">
+                <RenderMessageContent text={msg.content} />
+              </div>
+
               {/* msg.optionsがあれば選択肢を表示。optionsLayoutで縦横を切り替え */}
               {msg.options && (
                 <div
@@ -165,6 +229,21 @@ export default function Chatbot() {
           </button>
         </div>
       </div>
+
+      {/* 画像モーダル */}
+      {selectedImageUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="relative bg-white p-4 rounded-xl shadow-lg max-w-xl">
+            <button
+              onClick={closeImageModal}
+              className="absolute top-2 right-2 bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center"
+            >
+              ✕
+            </button>
+            <img src={selectedImageUrl} alt="enlarged" className="max-w-full h-auto rounded" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
