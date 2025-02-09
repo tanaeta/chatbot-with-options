@@ -161,6 +161,15 @@ export default function Chatbot() {
     }, 1000);
   };
 
+  // Enterキーを押した時にメッセージを送信
+  // Shift+Enterで改行
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <div className="w-full max-w-lg mx-auto h-[calc(100vh-4rem)] flex flex-col rounded-2xl bg-gray-50 shadow relative">
       {/* ヘッダー部分 */}
@@ -178,7 +187,7 @@ export default function Chatbot() {
           >
             <div
               className={`flex flex-col p-2 rounded-2xl whitespace-pre-wrap mb-2 max-w-sm text-lg ${
-                msg.role === 'assistant' ? 'bg-purple-100 text-left' : 'bg-blue-100 text-right'
+                msg.role === 'assistant' ? 'bg-purple-100 text-left' : 'bg-blue-100 text-left'
               }`}
             >
               {/* メッセージ内のテキスト・画像URLを分割して表示 */}
@@ -213,16 +222,17 @@ export default function Chatbot() {
 
       {/* 入力欄を常に下部に固定して表示する領域 */}
       <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex">
-          <input
-            className="w-full border border-gray-300 p-2 rounded-l-2xl focus:outline-none"
-            type="text"
+        <div className="flex w-full">
+          <textarea
+            className="w-full border border-gray-300 p-2 rounded-l-2xl focus:outline-none resize-none"
+            rows={2}
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="ご質問を入力してください..."
           />
           <button
-            className="bg-purple-600 text-white px-4 rounded-r-2xl"
+            className="bg-purple-600 text-white px-4 rounded-r-2xl whitespace-nowrap"
             onClick={handleSend}
           >
             送信
